@@ -726,9 +726,9 @@ Family history: Father - MI at 58"></textarea>
 // ════════════════════════════════════════════
 let API_KEY='', running=false, results=null, docs=[], modelOK={}, doneCount=0;
 const MODELS=[
-  {key:'flash',  id:'gemini-1.5-flash',    lbl:'Flash 1.5', use:'Agents 1,2,7,8'},
-  {key:'pro',    id:'gemini-1.5-pro',      lbl:'Pro 1.5',   use:'Agents 4,6'},
-  {key:'flash8', id:'gemini-1.5-flash-8b', lbl:'Flash 8B',  use:'Agents 3,5'}
+  {key:'flash',  id:'gemini-2.5-flash',    lbl:'Flash 2.5', use:'Agents 1,2,7,8'},
+  {key:'pro',    id:'gemini-2.5-flash-lite',      lbl:'lite 2.5',   use:'Agents 4,6'},
+  {key:'flash8', id:'gemini-3.0-flash-preview', lbl:'Flash 3.0',  use:'Agents 3,5'}
 ];
 const AMAP={classifier:'flash',extractor:'flash',enricher:'flash8',evaluator:'pro',risk:'flash8',decision:'pro',sp_handler:'flash',referral:'flash'};
 const AGENTS=[
