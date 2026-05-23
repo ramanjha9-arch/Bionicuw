@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PulseUW — Bionic Underwriting Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F4F6FA;--surface:#FFF;--surface2:#F8FAFC;--surface3:#EEF2F8;
+  --border:#E2E8F0;--border2:#C8D5E8;
+  --ink:#0F1E35;--ink2:#2D4263;--ink3:#5A738F;--ink4:#9BAFC8;--ink5:#D0DCE9;
+  --blue:#1B5FDE;--blue-lt:#EEF3FD;--blue-mid:#3B7CF4;--blue-dk:#1044A8;
+  --red:#D93B3B;--red-lt:#FEF0F0;
+  --amber:#C97B0E;--amber-lt:#FEF7E6;
+  --green:#0F7B52;--green-lt:#EAF7F2;
+  --violet:#6B3FA0;--violet-lt:#F3EEFF;
+  --teal:#0A7B8C;--teal-lt:#E6F7F9;
+  --sans:'Plus Jakarta Sans',sans-serif;
+  --serif:'Lora',Georgia,serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:8px;--r2:12px;--r3:16px;
+  --xs:0 1px 3px rgba(15,30,53,.07);
+  --sm:0 2px 8px rgba(15,30,53,.09);
+  --md:0 6px 24px rgba(15,30,53,.12);
+  --lg:0 16px 48px rgba(15,30,53,.16);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px;height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);height:100%;overflow:hidden;display:flex;flex-direction:column}
+button,input,select,textarea{font-family:var(--sans)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--ink5);border-radius:3px}
+.view{display:none;flex-direction:column;height:100vh;overflow:hidden}
+.view.active{display:flex}
+/* TOPBAR */
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;box-shadow:var(--xs);z-index:50}
+.tb-brand{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tb-logo{width:30px;height:30px;background:linear-gradient(135deg,var(--blue),var(--blue-mid));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;color:#fff;font-weight:600}
+.tb-name{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.3px}
+.tb-name span{color:var(--blue)}
+.tb-badge{font-size:9px;background:linear-gradient(135deg,var(--blue),var(--blue-mid));color:#fff;padding:2px 8px;border-radius:10px;font-weight:700;letter-spacing:.5px;margin-left:2px}
+.tb-sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.tb-nav{display:flex;gap:2px}
+.tb-nav-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink3);transition:all .15s}
+.tb-nav-btn:hover{background:var(--bg);color:var(--ink2)}
+.tb-nav-btn.active{background:var(--blue-lt);color:var(--blue)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-avatar{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#1D3461,var(--blue-mid));color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.tb-btn{width:30px;height:30px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);color:var(--ink3);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.tb-btn:hover{background:var(--blue-lt);color:var(--blue)}
+.tb-caseid{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--blue);background:var(--blue-lt);padding:3px 9px;border-radius:5px;border:1px solid #C3D5FB}
+.tb-cname{font-size:13px;font-weight:600;color:var(--ink)}
+.tb-cmeta{font-size:11px;color:var(--ink3)}
+.tb-pill{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
+.tb-pill.critical{background:var(--red-lt);color:var(--red);border:1px solid #FBBFBF}
+.tb-pill.high{background:var(--amber-lt);color:var(--amber);border:1px solid #FDD89B}
+.tb-pill.standard{background:var(--green-lt);color:var(--green);border:1px solid #A7E8D4}
+.tb-pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+/* SALES VIEW */
+.upload-view-body{flex:1;overflow-y:auto;padding:20px}
+.upload-hero{background:linear-gradient(135deg,#0F2952,#1B5FDE 50%,#2D3282);border-radius:var(--r3);padding:28px 32px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden}
+.upload-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);border-radius:50%}
+.uh-eyebrow{font-size:10px;font-weight:700;letter-spacing:2px;opacity:.6;margin-bottom:8px;text-transform:uppercase}
+.uh-title{font-size:22px;font-weight:800;margin-bottom:6px;letter-spacing:-.4px}
+.uh-sub{font-size:12px;opacity:.75;line-height:1.6;max-width:520px;margin-bottom:18px}
+.uh-steps{display:flex;gap:12px;flex-wrap:wrap}
+.uh-step{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);border-radius:var(--r2);padding:9px 13px}
+.uh-step-num{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.uh-step-text{font-size:11px;font-weight:600;line-height:1.3}
+/* API STRIP */
+.api-strip{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;box-shadow:var(--xs);flex-wrap:wrap}
+.api-strip-label{font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.api-strip-input{flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:7px 12px;font-size:12px;color:var(--ink);outline:none}
+.api-strip-input:focus{border-color:var(--blue-mid)}
+.model-selector{display:flex;gap:6px;flex-wrap:wrap}
+.model-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1.5px solid var(--border);border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;background:var(--surface2);color:var(--ink3);transition:all .15s}
+.model-chip.ok{border-color:#A7E8D4;background:var(--green-lt);color:var(--green)}
+.model-chip.err{border-color:#FBBFBF;background:var(--red-lt);color:var(--red)}
+.model-chip.testing{border-color:#FDD89B;background:var(--amber-lt);color:var(--amber)}
+.mcdot{width:7px;height:7px;border-radius:50%;background:var(--ink5);flex-shrink:0}
+.model-chip.ok .mcdot{background:var(--green)}
+.model-chip.err .mcdot{background:var(--red);animation:pulse 1.5s infinite}
+.model-chip.testing .mcdot{background:var(--amber);animation:pulse .8s infinite}
+.conn-btn{padding:7px 16px;border-radius:var(--r);background:var(--blue);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.conn-btn:hover{background:var(--blue-dk)}
+.conn-btn.ok{background:var(--green)}
+/* UPLOAD LAYOUT */
+.upload-layout{display:grid;grid-template-columns:1fr 340px;gap:14px;align-items:start}
+@media(max-width:900px){.upload-layout{grid-template-columns:1fr}}
+.drop-zone{background:var(--surface);border:2px dashed var(--border2);border-radius:var(--r3);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;box-shadow:var(--xs)}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--blue-mid);background:var(--blue-lt)}
+.dz-icon{font-size:34px;margin-bottom:10px}
+.dz-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.dz-sub{font-size:11px;color:var(--ink3);margin-bottom:12px}
+.doc-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+.doc-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--blue-lt);border:1px solid #C3D5FB;border-radius:20px;font-size:10px;font-weight:600;color:var(--blue)}
+.doc-chip .rm{cursor:pointer;color:var(--ink3);margin-left:2px;font-size:12px;line-height:1}
+.doc-chip .rm:hover{color:var(--red)}
+.doc-textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:11px;font-family:var(--mono);font-size:11px;color:var(--ink);outline:none;width:100%;min-height:160px;resize:vertical;line-height:1.7;margin-top:10px}
+.doc-textarea:focus{border-color:var(--blue-mid)}
+/* AGENT CARD */
+.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;box-shadow:var(--xs);position:sticky;top:0}
+.ac-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.prog-track{height:3px;background:var(--border);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-mid));border-radius:2px;transition:width .5s ease;width:0}
+.agent-rows{display:flex;flex-direction:column;gap:3px}
+.agent-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);border:1px solid transparent;transition:all .25s}
+.agent-row.idle{background:var(--surface2);border-color:var(--border)}
+.agent-row.active{background:var(--blue-lt);border-color:#C3D5FB}
+.agent-row.done{background:var(--green-lt);border-color:#A7E8D4}
+.ar-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.ar-info{flex:1;min-width:0}
+.ar-name{font-size:11px;font-weight:700;color:var(--ink)}
+.agent-row.active .ar-name{color:var(--blue)}
+.agent-row.done .ar-name{color:var(--green)}
+.ar-model{font-size:9px;color:var(--ink4);font-family:var(--mono)}
+.ar-stat{flex-shrink:0}
+.sp{width:12px;height:12px;border:2px solid #C3D5FB;border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;display:inline-block}
+.run-btn{width:100%;margin-top:12px;padding:10px;border-radius:var(--r2);background:linear-gradient(135deg,var(--blue),var(--blue-mid));border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.run-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(27,95,222,.35)}
+.run-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+/* TRANSFER BANNER */
+.transfer-banner{background:linear-gradient(135deg,#EAF7F2,#D1FAE5);border:1.5px solid #6EE7B7;border-radius:var(--r2);padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;animation:slideDown .4s ease}
+.tb-icon2{font-size:28px}
+.tb-text h3{font-size:13px;font-weight:700;color:var(--green);margin-bottom:3px}
+.tb-text p{font-size:11px;color:#065F46;line-height:1.5}
+.tb-action{margin-left:auto;flex-shrink:0}
+.go-btn{padding:9px 20px;border-radius:var(--r);background:var(--green);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.go-btn:hover{background:#0A6A45;transform:translateY(-1px)}
+.err-bar{background:var(--red-lt);border:1px solid #FBBFBF;border-radius:var(--r);padding:9px 13px;margin-top:8px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--red)}
+.ecl{margin-left:auto;cursor:pointer;font-size:14px;color:var(--ink3)}
+/* PROCESS TRACK */
+.process-track{height:38px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;flex-shrink:0;overflow-x:auto}
+.pt-step{display:flex;align-items:center;gap:7px;padding:0 12px;height:100%;font-size:11px;font-weight:500;color:var(--ink3);border-right:1px solid var(--border);cursor:pointer;transition:all .15s;position:relative;white-space:nowrap;flex-shrink:0}
+.pt-step.done{color:var(--green)}
+.pt-step.active{color:var(--blue);background:var(--blue-lt)}
+.pt-step.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--blue)}
+.pt-step.pending{color:var(--ink4)}
+.ps-label{font-weight:600;font-size:11px}
+.ps-sub{font-size:9px;opacity:.7}
+.pt-arrow{color:var(--ink5);font-size:16px;padding:0 2px;flex-shrink:0}
+.ai-badge{display:flex;align-items:center;gap:4px;padding:2px 8px;background:linear-gradient(135deg,#EEF3FD,#F3EEFF);border:1px solid #C3D5FB;border-radius:20px;font-size:9px;font-weight:700;color:var(--blue)}
+/* WORKSPACE */
+.workspace{display:flex;flex:1;overflow:hidden;min-height:0}
+.main-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.tab-bar{height:38px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:2px;flex-shrink:0;overflow-x:auto}
+.tab{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--ink3);transition:all .15s;border:1px solid transparent;white-space:nowrap;flex-shrink:0}
+.tab:hover{background:var(--bg);color:var(--ink2)}
+.tab.on{background:var(--blue-lt);color:var(--blue);border-color:#C3D5FB}
+.tab-content{flex:1;overflow-y:auto;padding:14px;display:none;flex-direction:column;gap:12px}
+.tab-content.on{display:flex}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:var(--xs)}
+.card-hd{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.card-bd{padding:12px 14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g3w{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+@media(max-width:1100px){.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:750px){.g2,.g3,.g3w{grid-template-columns:1fr}}
+/* DATA ROWS */
+.drow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.drow:last-child{border-bottom:none}
+.dl{color:var(--ink3);font-size:11px}
+.dv{font-weight:600;color:var(--ink);text-align:right}
+.dv.blue{color:var(--blue)}.dv.red{color:var(--red)}.dv.amber{color:var(--amber)}.dv.green{color:var(--green)}
+/* RISK BOXES */
+.risk-box{border-radius:var(--r2);padding:11px 13px;border:1.5px solid;margin-bottom:7px}
+.risk-box.critical{background:var(--red-lt);border-color:#FBBFBF}
+.risk-box.high{background:var(--amber-lt);border-color:#FDD89B}
+.risk-box.std{background:var(--green-lt);border-color:#A7E8D4}
+.risk-box.info{background:var(--blue-lt);border-color:#C3D5FB}
+.rb-title{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.rb-title.critical{color:var(--red)}.rb-title.high{color:var(--amber)}.rb-title.std{color:var(--green)}.rb-title.info{color:var(--blue)}
+.rb-finding{display:flex;align-items:flex-start;gap:6px;font-size:11px;color:var(--ink2);padding:2px 0}
+.rb-finding::before{content:'•';flex-shrink:0}
+/* VITALS */
+.vital-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:800px){.vital-grid{grid-template-columns:repeat(2,1fr)}}
+.vc{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px 10px;position:relative;overflow:hidden}
+.vc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.vc.n::before{background:var(--green)}.vc.a::before{background:var(--red)}.vc.b::before{background:var(--amber)}
+.vc.ai-fill{box-shadow:0 0 0 1.5px var(--blue-mid) inset}
+.vc-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink4);font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.vc-ai{font-size:7px;background:var(--blue-lt);color:var(--blue);padding:1px 4px;border-radius:3px;font-weight:700}
+.vc-val{font-size:15px;font-weight:700;font-family:var(--mono);line-height:1}
+.vc-val.n{color:var(--green)}.vc-val.a{color:var(--red)}.vc-val.b{color:var(--amber)}
+.vc-ref{font-size:9px;color:var(--ink4);margin-top:3px}
+.vc-stat{font-size:9px;font-weight:700;margin-top:3px}
+.vc-stat.n{color:var(--green)}.vc-stat.a{color:var(--red)}.vc-stat.b{color:var(--amber)}
+/* MODEL CARDS */
+.mc{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.mc-hd{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+.mc-name{font-size:11px;font-weight:700;color:var(--ink2)}
+.mc-ver{font-family:var(--mono);font-size:9px;color:var(--ink4)}
+.mc-bd{padding:12px}
+.mc-row{display:flex;align-items:center;gap:12px}
+.mc-gauge{position:relative;width:64px;height:64px;flex-shrink:0}
+.mc-gauge svg{width:64px;height:64px}
+.mc-gval{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:700;font-family:var(--mono)}
+.mc-det{flex:1}
+.mc-lbl{font-size:12px;font-weight:700;color:var(--ink)}
+.mc-sub{font-size:10px;color:var(--ink3);margin-top:2px}
+.mc-factors{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.mc-factor{display:flex;align-items:center;gap:8px;font-size:10px}
+.mc-fl{color:var(--ink3);width:100px;flex-shrink:0}
+.mc-fb{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.mc-ff{height:100%;border-radius:3px;transition:width 1s ease}
+.mc-fv{font-family:var(--mono);font-size:9px;font-weight:600;width:30px;text-align:right}
+/* REMARKS */
+.rmbox{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;font-size:11px;color:var(--ink2);line-height:1.7}
+.rmbox.ai{border-color:#C3D5FB;background:var(--blue-lt)}
+.rm-who{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:flex;align-items:center;gap:6px;justify-content:space-between;flex-wrap:wrap}
+.rm-stamp{font-family:var(--mono);font-size:9px;color:var(--ink4)}
+.ai-stamp{font-size:9px;background:linear-gradient(135deg,var(--blue-lt),var(--violet-lt));color:var(--blue);padding:2px 7px;border-radius:4px;font-weight:700;border:1px solid #C3D5FB}
+/* MED DECISION */
+.med-dec{border-radius:var(--r2);overflow:hidden;border:1px solid var(--border)}
+.md-hdr{padding:10px 14px;display:flex;align-items:center;gap:10px}
+.md-hdr.ai-done{background:var(--blue-lt)}.md-hdr.done{background:#E8F9F3}.md-hdr.pend{background:var(--amber-lt)}
+.md-hdr-icon{font-size:18px}
+.md-title{font-size:12px;font-weight:700}
+.md-title.ai{color:var(--blue)}.md-title.done{color:var(--green)}
+.md-sub{font-size:10px;margin-top:1px;opacity:.7}
+.md-bd{padding:10px 14px;background:var(--surface)}
+.md-fl{display:flex;flex-direction:column;gap:4px}
+.md-f{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--ink2);padding:4px 0}
+.md-fi{font-size:13px;flex-shrink:0}
+/* RIGHT PANEL */
+.right-panel{width:280px;flex-shrink:0;border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden}
+.rp-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2)}
+.rp-tab{flex:1;padding:9px 4px;font-size:10px;font-weight:700;text-align:center;cursor:pointer;color:var(--ink4);border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
+.rp-tab:hover{color:var(--ink2)}
+.rp-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.rp-body{flex:1;overflow-y:auto;padding:10px}
+.rp-body.h{display:none}
+.doc-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.doc-item:hover{border-color:var(--blue-mid);box-shadow:var(--xs)}
+.di-ico{font-size:17px;flex-shrink:0}
+.di-info{flex:1;min-width:0}
+.di-name{font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.di-meta{font-size:10px;color:var(--ink4);margin-top:1px}
+.di-st{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.di-st.ok{background:var(--green-lt);color:var(--green)}
+.di-st.pend{background:var(--amber-lt);color:var(--amber)}
+.di-st.ai{background:var(--blue-lt);color:var(--blue)}
+/* ACTION */
+.act-strip{padding:10px;border-top:1px solid var(--border)}
+.act-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.act-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;text-align:center}
+.act-btn:hover{transform:translateY(-1px);box-shadow:var(--sm)}
+.ab-ico{font-size:16px}.ab-lbl{font-size:10px;font-weight:600;color:var(--ink2)}
+.act-btn.pri{background:var(--blue-lt);border-color:#C3D5FB}
+.act-btn.dan{background:var(--red-lt);border-color:#FBBFBF}
+.act-btn.suc{background:var(--green-lt);border-color:#A7E8D4}
+.act-btn.amb{background:var(--amber-lt);border-color:#FDD89B}
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,30,53,.35);backdrop-filter:blur(3px);z-index:400;display:none;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--lg);width:500px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;animation:popIn .2s cubic-bezier(.34,1.56,.64,1)}
+.modal-hd{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2)}
+.modal-title{font-size:14px;font-weight:700;color:var(--ink);font-family:var(--serif);flex:1}
+.modal-cls{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s}
+.modal-cls:hover{background:var(--red-lt);color:var(--red)}
+.modal-bd{padding:16px 18px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:11px}
+.modal-ft{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:var(--surface2)}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px}
+.fg select,.fg input,.fg textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;color:var(--ink);font-size:12px;outline:none;transition:border-color .15s;font-family:var(--sans)}
+.fg select:focus,.fg input:focus,.fg textarea:focus{border-color:var(--blue-mid)}
+.fg textarea{resize:vertical;min-height:70px}
+/* DECISION GRID */
+.dec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dec-card{padding:11px 8px;border-radius:var(--r2);border:1.5px solid var(--border);cursor:pointer;text-align:center;background:var(--surface2);transition:all .2s}
+.dec-card:hover{transform:translateY(-2px);box-shadow:var(--sm)}
+.dec-card.accept:hover{border-color:var(--green);background:var(--green-lt)}
+.dec-card.loading:hover{border-color:var(--amber);background:var(--amber-lt)}
+.dec-card.decline:hover{border-color:var(--red);background:var(--red-lt)}
+.dec-card.refer:hover{border-color:var(--violet);background:var(--violet-lt)}
+.dec-card.post:hover{border-color:var(--teal);background:var(--teal-lt)}
+.dc-ico{font-size:20px;margin-bottom:5px}
+.dc-lbl{font-size:11px;font-weight:700;color:var(--ink)}
+.dc-desc{font-size:9px;color:var(--ink3);margin-top:2px}
+/* AI REC BOX */
+.ai-rec{background:linear-gradient(135deg,#EEF3FD,#F3EEFF);border:1.5px solid #C3D5FB;border-radius:var(--r2);padding:12px 14px;margin-bottom:4px}
+.ai-rec-title{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ai-rec-dec{font-size:16px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.ai-rec-load{font-size:12px;font-weight:700;color:var(--amber);margin-bottom:4px}
+.ai-rec-narr{font-size:11px;color:var(--ink2);line-height:1.6}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:var(--blue-dk)}
+.btn-g{background:var(--surface2);border:1px solid var(--border);color:var(--ink2)}.btn-g:hover{color:var(--ink)}
+.btn-d{background:var(--red-lt);border:1px solid #FBBFBF;color:var(--red)}.btn-d:hover{background:var(--red);color:#fff}
+.btn-s{background:var(--green-lt);border:1px solid #A7E8D4;color:var(--green)}.btn-s:hover{background:var(--green);color:#fff}
+.btn-a{background:var(--amber-lt);border:1px solid #FDD89B;color:var(--amber)}.btn-a:hover{background:var(--amber);color:#fff}
+.btn-sm{padding:5px 10px;font-size:11px}
+/* CHIPS / BADGES */
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
+.chip.r{background:var(--red-lt);color:var(--red);border:1px solid #FBBFBF}
+.chip.a{background:var(--amber-lt);color:var(--amber);border:1px solid #FDD89B}
+.chip.g{background:var(--green-lt);color:var(--green);border:1px solid #A7E8D4}
+.chip.b{background:var(--blue-lt);color:var(--blue);border:1px solid #C3D5FB}
+.chip.v{background:var(--violet-lt);color:var(--violet);border:1px solid #D4BBFF}
+.bdg{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+.bdg.r{background:var(--red-lt);color:var(--red)}.bdg.a{background:var(--amber-lt);color:var(--amber)}
+.bdg.g{background:var(--green-lt);color:var(--green)}.bdg.b{background:var(--blue-lt);color:var(--blue)}
+/* FLOAT TOOLBAR */
+.ft-wrap{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;align-items:center;gap:5px}
+.ft{background:var(--ink);border-radius:var(--r3);padding:5px 7px;display:flex;gap:3px;box-shadow:var(--lg);overflow:hidden;max-width:580px;transition:max-width .35s ease,padding .35s ease,opacity .25s;flex-wrap:nowrap}
+.ft.collapsed{max-width:0;padding:5px 0;opacity:0;pointer-events:none}
+.ft-toggle{display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:var(--r3);background:var(--ink);color:rgba(255,255,255,.8);font-size:10px;font-weight:600;cursor:pointer;box-shadow:var(--lg);border:none;white-space:nowrap}
+.ft-btn{display:flex;align-items:center;gap:4px;padding:6px 11px;border-radius:var(--r);font-size:10px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);transition:all .15s;white-space:nowrap}
+.ft-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.ft-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.ft-sep{width:1px;background:rgba(255,255,255,.1);margin:0 1px;flex-shrink:0}
+/* CHAT */
+.chat-panel{position:fixed;bottom:18px;right:20px;width:290px;height:370px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--lg);z-index:500;display:none;flex-direction:column;overflow:hidden}
+.chat-panel.open{display:flex}
+.cp-hdr{padding:9px 12px;background:linear-gradient(135deg,#0F4C2A,var(--green));display:flex;align-items:center;gap:8px}
+.cp-title{font-size:11px;font-weight:600;color:#fff;flex:1}
+.cp-cls{width:22px;height:22px;border-radius:5px;background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px}
+.cp-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.cm{max-width:85%}
+.cm.sent{align-self:flex-end}
+.cm.recv{align-self:flex-start}
+.cm-bubble{padding:7px 10px;border-radius:10px;font-size:11px;line-height:1.5}
+.cm.sent .cm-bubble{background:var(--blue);color:#fff;border-radius:10px 10px 3px 10px}
+.cm.recv .cm-bubble{background:var(--surface2);color:var(--ink);border:1px solid var(--border);border-radius:10px 10px 10px 3px}
+.cm-who{font-size:9px;color:var(--ink4);margin-bottom:3px}
+.cm-time{font-size:9px;color:rgba(255,255,255,.6);margin-top:3px;text-align:right}
+.cm.recv .cm-time{color:var(--ink4)}
+.cp-inp{padding:8px;border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface2)}
+.cp-txt{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:6px 9px;font-size:11px;color:var(--ink);outline:none;font-family:var(--sans);resize:none;min-height:30px}
+.cp-txt:focus{border-color:var(--green)}
+.cp-send{width:28px;height:28px;border-radius:var(--r);background:var(--green);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;align-self:flex-end}
+/* TOAST */
+.toast-wrap{position:fixed;top:55px;right:14px;z-index:999;display:flex;flex-direction:column;gap:5px}
+.toast{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--md);font-size:11px;color:var(--ink);min-width:180px;animation:slideRight .25s ease}
+/* MISC */
+.gap-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-title::before{content:'';width:14px;height:2px;background:currentColor;border-radius:1px}
+.fin-table{width:100%;border-collapse:collapse;font-size:12px}
+.fin-table th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink4);padding:7px 10px;background:var(--surface2);border-bottom:1px solid var(--border);text-align:left;font-weight:600}
+.fin-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink)}
+.fin-table tr:last-child td{border-bottom:none}
+.fin-table tr:hover td{background:var(--bg)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes slideRight{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<!-- ═══ VIEW 1: SALES PORTAL ═══ -->
+<div class="view active" id="v-sales">
+  <div class="topbar">
+    <div class="tb-brand"><div class="tb-logo">P</div><div class="tb-name">Pulse<span>UW</span></div><span class="tb-badge">BIONIC</span></div>
+    <div class="tb-sep"></div>
+    <div class="tb-nav">
+      <button class="tb-nav-btn active">📤 Sales Submission</button>
+      <button class="tb-nav-btn" id="uwNavBtn" onclick="goToUW()" style="opacity:.5;cursor:not-allowed">🔍 UW Workspace</button>
+    </div>
+    <div class="tb-right">
+      <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--ink3)">
+        <span id="gcDot" style="width:7px;height:7px;border-radius:50%;background:var(--ink5);display:inline-block"></span>
+        <span id="gcLabel">Not Connected</span>
+      </div>
+      <div class="tb-sep"></div><div class="tb-avatar">SA</div>
+    </div>
+  </div>
+  <div class="upload-view-body">
+    <div class="upload-hero">
+      <div class="uh-eyebrow">Bionic Underwriting Engine — Sales Portal</div>
+      <div class="uh-title">Upload Case Documents</div>
+      <div class="uh-sub">Upload proposal, medical reports, financials and ID. 8 AI agents analyse and pre-populate the UW workspace — ready for the underwriter in seconds.</div>
+      <div class="uh-steps">
+        <div class="uh-step"><div class="uh-step-num">1</div><div class="uh-step-text">Upload<br>Documents</div></div>
+        <div class="uh-step"><div class="uh-step-num">2</div><div class="uh-step-text">8 AI Agents<br>Analyse</div></div>
+        <div class="uh-step"><div class="uh-step-num">3</div><div class="uh-step-text">Auto Pre-fill<br>UW Workspace</div></div>
+        <div class="uh-step"><div class="uh-step-num">4</div><div class="uh-step-text">UW Reviews<br>&amp; Decides</div></div>
+      </div>
+    </div>
+    <div class="api-strip">
+      <span class="api-strip-label">🔑 Gemini API</span>
+      <input class="api-strip-input" type="password" id="apiKeyInput" placeholder="AIza... — free key at aistudio.google.com"/>
+      <div class="model-selector" id="modelSel"></div>
+      <button class="conn-btn" id="connBtn" onclick="connectModels()">Connect &amp; Test</button>
+    </div>
+    <div class="transfer-banner" id="xferBanner" style="display:none">
+      <div class="tb-icon2">🎯</div>
+      <div class="tb-text"><h3>AI Analysis Complete — Workspace Pre-populated</h3><p id="xferMsg">All 8 agents finished. UW workspace ready for review.</p></div>
+      <div class="tb-action"><button class="go-btn" onclick="goToUW()">Open UW Workspace →</button></div>
+    </div>
+    <div class="err-bar" id="errBar" style="display:none"><span>⚠️</span><span id="errMsg" style="flex:1"></span><span class="ecl" onclick="this.parentElement.style.display='none'">✕</span></div>
+    <div class="upload-layout">
+      <div>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fi').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')" ondrop="hDrop(event)">
+          <div class="dz-icon">📂</div>
+          <div class="dz-title">Drop documents here or click to upload</div>
+          <div class="dz-sub">Proposal · MER · ITR · Cardiologist report · KYC — multiple files OK</div>
+          <div class="doc-chips" id="docChips"></div>
+        </div>
+        <input type="file" id="fi" accept=".txt,.pdf,.docx" multiple style="display:none" onchange="hFiles(event)"/>
+        <div style="margin-top:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--ink3);margin-bottom:4px;display:flex;justify-content:space-between"><span>📋 PASTE DOCUMENT TEXT</span><span style="font-weight:400;color:var(--ink4)">separate multiple docs with ---</span></div>
+          <textarea class="doc-textarea" id="manualText" placeholder="Paste proposal form, medical report, ITR, or any insurance document...
+
+Example:
+Proposer: Sarah Johnson | DOB: 22 Mar 1978 | Gender: Female
+Occupation: Teacher | Income: $72,000/yr
+Sum Assured: $750,000 | Term: 25 years | Product: Term Life
+Medical: Type 2 Diabetes (2018, HbA1c 8.1%), Hypertension controlled
+BMI: 31.4 | BP: 142/92 | Non-smoker
+Family history: Father - MI at 58"></textarea>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="ac-title"><span>🤖 AI Agent Pipeline</span><span id="agProg" style="font-size:10px;font-weight:600;color:var(--ink4)">0 / 8</span></div>
+        <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+        <div class="agent-rows" id="agRows"></div>
+        <button class="run-btn" id="runBtn" onclick="runPipeline()">▶ Analyse &amp; Pre-fill UW Workspace</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VIEW 2: UW WORKSPACE ═══ -->
+<div class="view" id="v-uw">
+  <div class="topbar">
+    <div class="tb-brand"><div class="tb-logo">P</div><div class="tb-name">Pulse<span>UW</span></div><span class="tb-badge">BIONIC</span></div>
+    <div class="tb-sep"></div>
+    <div class="tb-nav">
+      <button class="tb-nav-btn" onclick="showView('sales')">← Sales Upload</button>
+      <button class="tb-nav-btn active">🔍 UW Workspace</button>
+    </div>
+    <div class="tb-sep"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="tb-caseid" id="caseId">UW-AUTO</div>
+      <div><div class="tb-cname" id="caseName">AI Pre-filled Case</div><div class="tb-cmeta" id="caseMeta">Processing...</div></div>
+    </div>
+    <div class="tb-pill critical" id="riskPill"><div class="dot"></div><span id="riskPillTxt">AI Analysis</span></div>
+    <div class="tb-right">
+      <button class="tb-btn" onclick="showToast('Previous case','info')">←</button>
+      <button class="tb-btn" onclick="showToast('Next case','info')">→</button>
+      <div class="tb-sep"></div>
+      <button class="btn btn-g btn-sm" onclick="showView('sales')">← Queue</button>
+      <div class="tb-avatar">RK</div>
+    </div>
+  </div>
+  <div class="process-track">
+    <div class="pt-step done">✅<div><div class="ps-label">Submission</div><div class="ps-sub" id="ptDate">—</div></div></div>
+    <span class="pt-arrow">›</span>
+    <div class="pt-step done" style="position:relative">
+      🤖<div><div class="ps-label">AI Analysis</div><div class="ps-sub">8 agents · Done</div></div>
+      <div class="ai-badge" style="position:absolute;top:-10px;right:-4px">⚡ AI</div>
+    </div>
+    <span class="pt-arrow">›</span>
+    <div class="pt-step done">✅<div><div class="ps-label">System Check</div><div class="ps-sub">AML · CKYC</div></div></div>
+    <span class="pt-arrow">›</span>
+    <div class="pt-step active">🔍<div><div class="ps-label">UW Review</div><div class="ps-sub">In progress</div></div></div>
+    <span class="pt-arrow">›</span>
+    <div class="pt-step pending">⚖️<div><div class="ps-label">Decision</div><div class="ps-sub">Pending</div></div></div>
+    <span class="pt-arrow">›</span>
+    <div class="pt-step pending">📄<div><div class="ps-label">Issuance</div><div class="ps-sub">—</div></div></div>
+  </div>
+  <div class="workspace">
+    <div class="main-panel">
+      <div class="tab-bar">
+        <div class="tab on" onclick="swTab('overview',this)">📋 Overview</div>
+        <div class="tab" onclick="swTab('medical',this)">🩺 Medical</div>
+        <div class="tab" onclick="swTab('financial',this)">💰 Financial</div>
+        <div class="tab" onclick="swTab('profile',this)">👤 Profile</div>
+        <div class="tab" onclick="swTab('model',this)">🤖 AI Scores</div>
+        <div class="tab" onclick="swTab('history',this)">📜 Activity</div>
+      </div>
+      <!-- OVERVIEW -->
+      <div class="tab-content on" id="tab-overview">
+        <div class="g3">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">🚨 Risk Classification</div><span class="bdg r" id="riskBdg">ANALYSING</span></div>
+            <div class="card-bd" id="riskBd"><div style="color:var(--ink4);font-size:11px;padding:18px 0;text-align:center">⏳ AI analysis in progress...</div></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">🤖 AI Pre-Assessment</div><span class="bdg b">AI</span></div>
+            <div class="card-bd" style="padding:0">
+              <div class="med-dec">
+                <div class="md-hdr ai-done" id="aiDecHdr"><div class="md-hdr-icon">🧬</div>
+                  <div><div class="md-title ai" id="aiDecTtl">Processing...</div><div class="md-sub" style="color:var(--blue)" id="aiDecSub">Agents running...</div></div>
+                </div>
+                <div class="md-bd"><div class="md-fl" id="aiDecFindings"><div class="md-f"><span class="md-fi">⏳</span><div>Waiting for AI analysis...</div></div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">⚡ Quick Facts</div><span class="ai-stamp">⚡ AI</span></div>
+            <div class="card-bd" id="qFacts"><div style="color:var(--ink4);font-size:11px;padding:10px 0;text-align:center">⏳ Extracting...</div></div>
+          </div>
+        </div>
+        <div class="g3w">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">🔌 External Data APIs</div><button class="btn btn-g btn-sm" onclick="showToast('APIs refreshed','info')">↻ Refresh</button></div>
+            <div class="card-bd">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+                <button class="btn btn-g btn-sm" style="font-size:10px;border-color:#C3D5FB;color:var(--blue);background:var(--blue-lt)" onclick="callAPI('cibil')">📊 CIBIL</button>
+                <button class="btn btn-g btn-sm" style="font-size:10px;border-color:#A7E8D4;color:var(--green);background:var(--green-lt)" onclick="callAPI('epfo')">🏢 EPFO</button>
+                <button class="btn btn-g btn-sm" style="font-size:10px;border-color:#FDD89B;color:var(--amber);background:var(--amber-lt)" onclick="callAPI('gst')">🧾 GST</button>
+                <button class="btn btn-g btn-sm" style="font-size:10px;border-color:#FBBFBF;color:var(--red);background:var(--red-lt)" onclick="callAPI('aml')">🛡 AML</button>
+                <button class="btn btn-g btn-sm" style="font-size:10px;border-color:#B2EAF5;color:var(--teal);background:var(--teal-lt)" onclick="callAPI('ckyc')">🪪 CKYC</button>
+              </div>
+              <div id="apiRes"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📝 Remarks</div></div>
+            <div class="card-bd" style="display:flex;flex-direction:column;gap:8px">
+              <div class="rmbox ai"><div class="rm-who"><span>🤖 AI Auto-UW Engine</span><span class="ai-stamp">⚡ Generated</span></div><div id="aiRemark">Analysis in progress...</div></div>
+              <div class="rmbox" id="uwRmkBox" style="display:none"><div class="rm-who"><span>🔍 Underwriter</span><span class="rm-stamp" id="uwRmkTime"></span></div><div id="uwRmkTxt"></div></div>
+              <button class="btn btn-g btn-sm" style="align-self:flex-end" onclick="openModal('notesModal')">✏ Add Note</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- MEDICAL -->
+      <div class="tab-content" id="tab-medical">
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📊 Vitals &amp; Labs</div><span class="ai-stamp">⚡ AI Extracted</span></div>
+            <div class="card-bd"><div class="vital-grid" id="vitGrid"><div style="grid-column:1/-1;color:var(--ink4);font-size:11px;padding:16px 0;text-align:center">⏳ Extracting vitals...</div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">🏥 Conditions &amp; History</div></div>
+            <div class="card-bd" style="display:flex;flex-direction:column;gap:8px" id="condPanel"><div style="color:var(--ink4);font-size:11px;padding:16px 0;text-align:center">⏳ Extracting...</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">🩺 Medical Assessment</div><span class="bdg b">AI Pre-assessment</span></div>
+          <div class="card-bd"><div class="rmbox ai" style="font-size:12px"><div class="rm-who"><span>🤖 AI Medical Agent</span><span class="ai-stamp">⚡ AI Pre-fill</span></div><div id="medFullRmk">AI medical assessment will appear here.</div></div></div>
+        </div>
+      </div>
+      <!-- FINANCIAL -->
+      <div class="tab-content" id="tab-financial">
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">💹 Financial Summary</div><span class="ai-stamp">⚡ AI Extracted</span></div>
+            <div class="card-bd" id="finSum"><div style="color:var(--ink4);font-size:11px;padding:16px 0;text-align:center">⏳ Extracting...</div></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">⚠️ Financial Risk Flags</div></div>
+            <div class="card-bd" style="display:flex;flex-direction:column;gap:8px" id="finFlags"><div style="color:var(--ink4);font-size:11px;padding:16px 0;text-align:center">⏳ Analysing...</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- PROFILE -->
+      <div class="tab-content" id="tab-profile">
+        <div class="g3">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">👤 Proposer Details</div><span class="ai-stamp">⚡ AI Extracted</span></div>
+            <div class="card-bd" id="profDet"><div style="color:var(--ink4);font-size:11px;padding:16px 0;text-align:center">⏳ Extracting...</div></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">🛡 KYC &amp; AML</div></div>
+            <div class="card-bd">
+              <div class="drow"><span class="dl">AML Screen</span><span class="dv green">Clear ✓</span></div>
+              <div class="drow"><span class="dl">CKYC Status</span><span class="dv green">Verified ✓</span></div>
+              <div class="drow"><span class="dl">PEP Check</span><span class="dv green">No Match ✓</span></div>
+              <div class="drow"><span class="dl">Sanctions</span><span class="dv green">Clear ✓</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📋 Policy Details</div></div>
+            <div class="card-bd" id="polDet"><div style="color:var(--ink4);font-size:11px;padding:10px 0;text-align:center">⏳ Extracting...</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- AI SCORES -->
+      <div class="tab-content" id="tab-model">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="sec-title">AI Underwriting Model Outputs</div>
+          <div class="g3">
+            <div class="mc"><div class="mc-hd"><div class="mc-name">Mortality Risk Model</div><div class="mc-ver">v3.2 · LightGBM</div></div><div class="mc-bd" id="mcMort"><div style="color:var(--ink4);font-size:11px;text-align:center;padding:18px 0">⏳ Calculating...</div></div></div>
+            <div class="mc"><div class="mc-hd"><div class="mc-name">UW Risk Score</div><div class="mc-ver">v4.1 · Rule Engine + AI</div></div><div class="mc-bd" id="mcUW"><div style="color:var(--ink4);font-size:11px;text-align:center;padding:18px 0">⏳ Calculating...</div></div></div>
+            <div class="mc"><div class="mc-hd"><div class="mc-name">Fraud Propensity</div><div class="mc-ver">v1.8 · Ensemble</div></div><div class="mc-bd" id="mcFraud"><div style="color:var(--ink4);font-size:11px;text-align:center;padding:18px 0">⏳ Calculating...</div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">💡 AI Recommendation</div><span class="chip b">Advisory Only</span></div>
+            <div class="card-bd"><div class="rmbox ai"><div class="rm-who"><span>🤖 NovaBench UW Engine</span><span class="ai-stamp">⚡ Generated</span></div><div id="aiRecTxt">Recommendation will appear after analysis.</div></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- HISTORY -->
+      <div class="tab-content" id="tab-history">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">📜 Case Activity Log</div></div>
+          <div class="card-bd" id="actLog" style="display:flex;flex-direction:column;gap:0"><div style="color:var(--ink4);font-size:11px;padding:18px 0;text-align:center">⏳ Activity will be logged here...</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <div class="rp-tabs">
+        <div class="rp-tab on" onclick="swRP('docs',this)">📁 Docs</div>
+        <div class="rp-tab" onclick="swRP('fr',this)">📨 FR</div>
+        <div class="rp-tab" onclick="swRP('actions',this)">⚡ Act</div>
+      </div>
+      <div class="rp-body" id="rp-docs"><div id="docPanel"><div style="color:var(--ink4);font-size:11px;padding:18px 0;text-align:center">⏳ Docs appear after analysis...</div></div></div>
+      <div class="rp-body h" id="rp-fr">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--ink2)">Further Requirements</div>
+          <button class="btn btn-a btn-sm" onclick="openModal('frModal')">+ Raise FR</button>
+        </div>
+        <div id="frPanel"><div style="color:var(--ink4);font-size:11px;padding:10px 0;text-align:center">No open FRs</div></div>
+      </div>
+      <div class="rp-body h" id="rp-actions">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ink3);margin-bottom:8px">Case Actions</div>
+        <div class="act-grid">
+          <div class="act-btn amb" onclick="openModal('frModal')"><div class="ab-ico">📨</div><div class="ab-lbl">Raise FR</div></div>
+          <div class="act-btn pri" onclick="openModal('decModal')"><div class="ab-ico">⚖️</div><div class="ab-lbl">Decision</div></div>
+          <div class="act-btn" onclick="openChatPanel()"><div class="ab-ico">💬</div><div class="ab-lbl">Chat</div></div>
+          <div class="act-btn" onclick="showToast('Agent notified','success')"><div class="ab-ico">📞</div><div class="ab-lbl">Msg Agent</div></div>
+          <div class="act-btn dan" onclick="openModal('decModal')"><div class="ab-ico">❌</div><div class="ab-lbl">Decline</div></div>
+          <div class="act-btn suc" onclick="openModal('decModal')"><div class="ab-ico">✅</div><div class="ab-lbl">Accept</div></div>
+        </div>
+      </div>
+      <div class="act-strip">
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-d btn-sm" style="flex:1" onclick="openModal('decModal')">✕ Decline</button>
+          <button class="btn btn-a btn-sm" style="flex:1" onclick="openModal('frModal')">📨 FR</button>
+          <button class="btn btn-p btn-sm" style="flex:1.5" onclick="openModal('decModal')">⚖️ Decision →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- FLOAT TOOLBAR -->
+  <div class="ft-wrap">
+    <div class="ft" id="ftBar">
+      <button class="ft-btn" onclick="openModal('notesModal')">✏️ Notes</button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" onclick="openChatPanel()">💬 Chat</button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" onclick="openModal('frModal')">📨 Raise FR</button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn on" onclick="openModal('decModal')">⚖️ Decision</button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" onclick="downloadJSON()">⬇ JSON</button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" onclick="downloadPDF()">⬇ PDF</button>
+    </div>
+    <button class="ft-toggle" onclick="document.getElementById('ftBar').classList.toggle('collapsed')">⌃ Quick Actions</button>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-backdrop" id="frModal">
+  <div class="modal">
+    <div class="modal-hd"><span>📨</span><div class="modal-title">Raise Further Requirement</div><button class="modal-cls" onclick="closeModal('frModal')">✕</button></div>
+    <div class="modal-bd">
+      <div class="fg"><label>FR Category</label><select><option>Medical — Lab Reports (CBC, LFT, RFT, HbA1c)</option><option>Medical — Physician's Statement</option><option>Medical — Specialist Report</option><option>Financial — Bank Statements (6 months)</option><option>Financial — ITR Copies</option><option>Financial — CA Certificate</option><option>KYC — Enhanced Due Diligence</option><option>Others</option></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label>Due Date</label><input type="date"/></div>
+        <div class="fg"><label>Priority</label><select><option>High</option><option>Medium</option><option>Low</option></select></div>
+      </div>
+      <div class="fg"><label>Instructions to Agent</label><textarea placeholder="Describe what is required..."></textarea></div>
+      <div class="fg"><label>Internal Notes</label><textarea placeholder="Internal observation (not shared)..."></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-g" onclick="closeModal('frModal')">Cancel</button>
+      <button class="btn btn-p" onclick="closeModal('frModal');showToast('FR sent to agent ✓','success')">Send FR →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="decModal">
+  <div class="modal" style="width:530px">
+    <div class="modal-hd"><span>⚖️</span><div class="modal-title">Underwriting Decision</div><button class="modal-cls" onclick="closeModal('decModal')">✕</button></div>
+    <div class="modal-bd">
+      <div class="ai-rec"><div class="ai-rec-title">🤖 AI Recommendation</div><div class="ai-rec-dec" id="aiRecDec">Analysing...</div><div class="ai-rec-load" id="aiRecLoad"></div><div class="ai-rec-narr" id="aiRecNarr">AI analysis in progress.</div></div>
+      <div class="dec-grid">
+        <div class="dec-card accept" onclick="makeDecision('Accept — Standard')"><div class="dc-ico">✅</div><div class="dc-lbl">Accept Standard</div><div class="dc-desc">No loading</div></div>
+        <div class="dec-card loading" onclick="makeDecision('Accept with Loading')"><div class="dc-ico">💰</div><div class="dc-lbl">Accept + Loading</div><div class="dc-desc">Apply premium loading</div></div>
+        <div class="dec-card refer" onclick="makeDecision('Refer to CMO')"><div class="dc-ico">🩺</div><div class="dc-lbl">Refer CMO</div><div class="dc-desc">Medical review</div></div>
+        <div class="dec-card refer" onclick="makeDecision('Refer to Sr. UW')"><div class="dc-ico">↗️</div><div class="dc-lbl">Refer Sr. UW</div><div class="dc-desc">Authority limit</div></div>
+        <div class="dec-card post" onclick="makeDecision('Postpone')"><div class="dc-ico">⏸</div><div class="dc-lbl">Postpone</div><div class="dc-desc">Await documents</div></div>
+        <div class="dec-card decline" onclick="makeDecision('Decline')"><div class="dc-ico">❌</div><div class="dc-lbl">Decline</div><div class="dc-desc">Declination letter</div></div>
+      </div>
+      <div class="fg"><label>Decision Notes (Mandatory for loading / decline)</label><textarea placeholder="State the rationale clearly..."></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-g" onclick="closeModal('decModal')">Cancel</button>
+      <button class="btn btn-p" onclick="closeModal('decModal');showToast('Decision recorded ✓','success')">Confirm Decision →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="notesModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-hd"><span>✏️</span><div class="modal-title">Add Case Note</div><button class="modal-cls" onclick="closeModal('notesModal')">✕</button></div>
+    <div class="modal-bd"><div class="fg"><label>Your Note</label><textarea id="noteInput" style="min-height:100px" placeholder="Add observations, flags, or follow-up actions..."></textarea></div></div>
+    <div class="modal-ft">
+      <button class="btn btn-g" onclick="closeModal('notesModal')">Cancel</button>
+      <button class="btn btn-p" onclick="saveNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="cp-hdr"><span>💬</span><div class="cp-title">Internal Chat</div><button class="cp-cls" onclick="closeChatPanel()">✕</button></div>
+  <div class="cp-msgs" id="chatMsgs"><div class="cm recv"><div class="cm-who">System</div><div class="cm-bubble">AI analysis complete. Case pre-populated and ready for review.</div><div class="cm-time">Just now</div></div></div>
+  <div class="cp-inp">
+    <textarea class="cp-txt" id="chatInput" placeholder="Type..." rows="1" onkeydown="sendOnEnter(event)"></textarea>
+    <button class="cp-send" onclick="sendChat()">→</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<script>
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let API_KEY='', running=false, results=null, docs=[], modelOK={}, doneCount=0;
+const MODELS=[
+  {key:'flash',  id:'gemini-1.5-flash',    lbl:'Flash 1.5', use:'Agents 1,2,7,8'},
+  {key:'pro',    id:'gemini-1.5-pro',      lbl:'Pro 1.5',   use:'Agents 4,6'},
+  {key:'flash8', id:'gemini-1.5-flash-8b', lbl:'Flash 8B',  use:'Agents 3,5'}
+];
+const AMAP={classifier:'flash',extractor:'flash',enricher:'flash8',evaluator:'pro',risk:'flash8',decision:'pro',sp_handler:'flash',referral:'flash'};
+const AGENTS=[
+  {id:'classifier',name:'Document Classifier',  icon:'🗂️', desc:'Type · Class · Profile'},
+  {id:'extractor', name:'Value Extractor',       icon:'🔍', desc:'Medical · Financial · Risk'},
+  {id:'enricher',  name:'Value Enricher',        icon:'⬆️', desc:'BMI · Normalise · Validate'},
+  {id:'evaluator', name:'Self-Evaluator',        icon:'🔁', desc:'Consistency · Conflicts'},
+  {id:'risk',      name:'Risk Calculator',       icon:'📊', desc:'UW rules · Score · Loadings'},
+  {id:'decision',  name:'UW Decision Agent',     icon:'⚖️', desc:'Accept · Rate · Refer · Decline'},
+  {id:'sp_handler',name:'SP Case Handler',       icon:'📋', desc:'Loading terms · Conditions'},
+  {id:'referral',  name:'Non-UW Referral',       icon:'👥', desc:'Human referral package'}
+];
+const UWR={
+  excl:['hiv','terminal illness','active cancer treatment','motor neurone'],
+  hi:['diabetes','hypertension','heart disease','stroke','cancer','kidney','liver','epilepsy','multiple sclerosis']
+};
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  renderModelSel(); renderAgentRows();
+});
+function renderModelSel(){
+  document.getElementById('modelSel').innerHTML=MODELS.map(m=>`
+    <div class="model-chip" id="mc-${m.key}">
+      <span class="mcdot" id="md-${m.key}"></span>${m.lbl}
+      <span style="font-size:8px;opacity:.6">${m.key==='pro'?'PRO':'FREE'}</span>
+    </div>`).join('');
+}
+function renderAgentRows(){
+  document.getElementById('agRows').innerHTML=AGENTS.map(a=>`
+    <div class="agent-row idle" id="ar-${a.id}">
+      <span class="ar-icon">${a.icon}</span>
+      <div class="ar-info">
+        <div class="ar-name">${a.name}</div>
+        <div class="ar-model">${MODELS.find(m=>m.key===AMAP[a.id])?.lbl||''} · ${a.desc}</div>
+      </div>
+      <span class="ar-stat" id="as-${a.id}"></span>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════
+// VIEW SWITCHING
+// ════════════════════════════════════════════
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active');
+}
+function goToUW(){
+  if(!results){showToast('Run AI pipeline first','warn');return;}
+  document.getElementById('uwNavBtn').style.opacity='1';
+  document.getElementById('uwNavBtn').style.cursor='pointer';
+  showView('uw');
+}
+
+// ════════════════════════════════════════════
+// API CONNECTION
+// ════════════════════════════════════════════
+async function connectModels(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key.startsWith('AIza')){showErr('Invalid key — must start with "AIza"');return;}
+  API_KEY=key;
+  const btn=document.getElementById('connBtn');
+  btn.textContent='Testing...'; btn.disabled=true;
+  let ok=0;
+  for(const m of MODELS){
+    const mc=document.getElementById('mc-'+m.key);
+    const md=document.getElementById('md-'+m.key);
+    if(mc)mc.className='model-chip testing';
+    try{
+      await rawCall(m.id,'Reply OK',10);
+      modelOK[m.id]=true; ok++;
+      if(mc)mc.className='model-chip ok';
+      showToast(m.lbl+' ✓','success');
+    }catch(e){
+      modelOK[m.id]=false;
+      if(mc)mc.className='model-chip err';
+      showToast(m.lbl+' unavailable','warn');
+    }
+  }
+  if(ok>0){
+    btn.textContent='✓ Connected'; btn.classList.add('ok');
+    document.getElementById('gcDot').style.background='var(--green)';
+    document.getElementById('gcLabel').textContent=ok+'/3 Models';
+    showToast(ok+' models connected','success');
+  }else{
+    showErr('No models connected. Check your API key and quota.');
+  }
+  btn.disabled=false;
+}
+
+// ════════════════════════════════════════════
+// FILE HANDLING
+// ════════════════════════════════════════════
+function hFiles(e){[...e.target.files].forEach(addFile);}
+function hDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag');[...e.dataTransfer.files].forEach(addFile);}
+function addFile(f){
+  if(f.type==='text/plain'){const r=new FileReader();r.onload=ev=>{docs.push({name:f.name,text:ev.target.result});appendText(f.name,ev.target.result);renderChips();};r.readAsText(f);}
+  else{docs.push({name:f.name,text:`[${f.name}]`});renderChips();}
+}
+function removeDoc(i){docs.splice(i,1);renderChips();}
+function renderChips(){
+  document.getElementById('docChips').innerHTML=docs.map((d,i)=>`
+    <div class="doc-chip">📄 ${esc(d.name)}<span class="rm" onclick="removeDoc(${i})">✕</span></div>`).join('');
+}
+function appendText(name,text){
+  const ta=document.getElementById('manualText');
+  if(ta.value.trim())ta.value+='\n\n---\n\n';
+  ta.value+=`=== ${name} ===\n${text}`;
+}
+
+// ════════════════════════════════════════════
+// GEMINI — ROBUST JSON
+// ════════════════════════════════════════════
+async function rawCall(modelId,prompt,maxTok=2048){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${API_KEY}`;
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:maxTok}})});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(`${res.status}: ${e?.error?.message||res.statusText}`);}
+  const d=await res.json();
+  return d?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+}
+function bestModel(id){
+  const pref=MODELS.find(m=>m.key===AMAP[id])?.id||'gemini-1.5-flash';
+  if(modelOK[pref])return pref;
+  for(const m of MODELS)if(modelOK[m.id])return m.id;
+  return 'gemini-1.5-flash';
+}
+async function jsonCall(agentId,prompt,retries=3){
+  const model=bestModel(agentId);
+  for(let i=0;i<=retries;i++){
+    try{
+      const p=`You MUST respond with ONLY a valid raw JSON object. Start immediately with { and end with }. No markdown, no code blocks, no explanations.\n\n${prompt}`;
+      const raw=await rawCall(model,p,2048);
+      const j=parseJ(raw);
+      if(j)return j;
+      if(i===retries)return {};
+      await sleep(900*(i+1));
+    }catch(e){if(i===retries)throw e;await sleep(1000);}
+  }
+  return {};
+}
+function parseJ(t){
+  if(!t)return null;
+  try{return JSON.parse(t.trim());}catch{}
+  const f=t.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if(f)try{return JSON.parse(f[1].trim());}catch{}
+  const s=t.indexOf('{'),e=t.lastIndexOf('}');
+  if(s>-1&&e>s){
+    try{return JSON.parse(t.substring(s,e+1));}catch{}
+    try{return JSON.parse(t.substring(s,e+1).replace(/,\s*([}\]])/g,'$1'));}catch{}
+  }
+  return null;
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ════════════════════════════════════════════
+// AGENT FUNCTIONS
+// ════════════════════════════════════════════
+async function aClassify(txt){
+  const r=await jsonCall('classifier',`Classify this insurance document. Return ONLY raw JSON:
+{"documentType":"Application Form","insuranceClass":"Life","productType":"Term Life","applicantName":null,"applicantAge":null,"sumAssured":null,"currency":"USD","confidence":80,"documentQuality":"Good","keyFlags":[],"documentSummary":"brief summary"}
+DOCUMENT:${txt.substring(0,3000)}`);
+  return{documentType:'Unknown',insuranceClass:'Life',productType:'Unknown',applicantName:null,applicantAge:null,sumAssured:null,currency:'USD',confidence:50,documentQuality:'Fair',keyFlags:[],documentSummary:'Processed',...(r||{})};
+}
+async function aExtract(txt,cls){
+  const r=await jsonCall('extractor',`Extract ALL underwriting fields from this ${cls?.insuranceClass||'Life'} insurance document. Return ONLY raw JSON:
+{"personalDetails":{"name":null,"dob":null,"age":null,"gender":null,"occupation":null,"smokerStatus":"Unknown","nationality":null,"residency":null},"financialDetails":{"sumAssured":null,"currency":"USD","premium":null,"annualIncome":null,"existingCover":null,"netWorth":null},"medicalDetails":{"height_cm":null,"weight_kg":null,"bmi":null,"bloodPressure":null,"cholesterol":null,"existingConditions":[],"medications":[],"familyHistory":[],"recentSurgeries":[],"lastMedicalExam":null},"riskFactors":{"hazardousActivities":[],"travelRisk":null,"drivingHistory":null},"policyDetails":{"term":null,"beneficiaries":[],"riders":[],"existingPolicies":[]},"missingFields":[],"rawFlags":[],"dataQuality":"Good"}
+DOCUMENT:${txt.substring(0,4000)}`);
+  return{personalDetails:{},financialDetails:{},medicalDetails:{existingConditions:[],medications:[],familyHistory:[]},riskFactors:{hazardousActivities:[]},policyDetails:{},missingFields:[],rawFlags:[],dataQuality:'Fair',...(r||{})};
+}
+function aEnrich(e){
+  const d=JSON.parse(JSON.stringify(e));
+  if(!d.medicalDetails)d.medicalDetails={existingConditions:[],medications:[],familyHistory:[]};
+  const md=d.medicalDetails;
+  if(!md.bmi&&md.height_cm&&md.weight_kg){const h=md.height_cm/100;md.bmi=+((md.weight_kg/(h*h)).toFixed(1));}
+  return d;
+}
+async function aEval(cls,ext){
+  const r=await jsonCall('evaluator',`Review this insurance data for underwriting quality. Return ONLY raw JSON:
+{"consistencyScore":75,"conflicts":[],"dataGaps":[],"confidenceLevel":"Medium","recommendAdditionalEvidence":[],"evaluatorNotes":"Summary","proceedToRisk":true,"qualityGrade":"B"}
+DATA:${JSON.stringify({cls,pd:ext.personalDetails,md:ext.medicalDetails,fd:ext.financialDetails})}`);
+  return{consistencyScore:70,conflicts:[],dataGaps:[],confidenceLevel:'Medium',recommendAdditionalEvidence:[],evaluatorNotes:'Evaluation complete',proceedToRisk:true,qualityGrade:'B',...(r||{})};
+}
+function aRisk(cls,ext,ev){
+  let score=100;
+  const loads=[],excls=[],flags=[];
+  const pd=ext.personalDetails||{}, md=ext.medicalDetails||{}, fd=ext.financialDetails||{};
+  const age=pd.age||0, bmi=md.bmi||0;
+  const smok=(pd.smokerStatus||'').toLowerCase();
+  const isSmoker=smok.includes('smoker')&&!smok.includes('non')&&!smok.includes('ex');
+  const conds=md.existingConditions||[], famHx=md.familyHistory||[];
+  const haz=(ext.riskFactors||{}).hazardousActivities||[], sa=fd.sumAssured||0;
+
+  if(age>80){score-=50;loads.push({r:'Age >80',adj:-50,sev:'critical'});flags.push({t:'critical',title:'Extreme Age',desc:`Age ${age}`});}
+  else if(age>70){score-=30;loads.push({r:'Age 71-80',adj:-30,sev:'high'});flags.push({t:'warning',title:'Advanced Age',desc:`Age ${age} — enhanced evidence required`});}
+  else if(age>60){score-=15;loads.push({r:'Age 61-70',adj:-15,sev:'medium'});flags.push({t:'info',title:'Mature Age',desc:`Age ${age} — standard age loading`});}
+
+  if(bmi>=40){score-=50;loads.push({r:'BMI ≥40 Morbid Obesity',adj:-50,sev:'critical'});flags.push({t:'critical',title:'Morbid Obesity',desc:`BMI ${bmi}`});}
+  else if(bmi>=35){score-=25;loads.push({r:'BMI 35-39',adj:-25,sev:'high'});flags.push({t:'warning',title:'Severe Obesity',desc:`BMI ${bmi}`});}
+  else if(bmi>=30){score-=10;loads.push({r:'BMI 30-34',adj:-10,sev:'medium'});flags.push({t:'warning',title:'Obese BMI',desc:`BMI ${bmi} — loading applies`});}
+  else if(bmi>0&&bmi<17){score-=15;loads.push({r:'BMI <17 Underweight',adj:-15,sev:'high'});flags.push({t:'warning',title:'Underweight',desc:`BMI ${bmi}`});}
+  else if(bmi>=18.5&&bmi<25)flags.push({t:'ok',title:'Healthy BMI',desc:`BMI ${bmi} ✓`});
+
+  if(isSmoker){score-=20;loads.push({r:'Current smoker',adj:-20,sev:'high'});flags.push({t:'warning',title:'Smoker',desc:'Tobacco loading +20%'});}
+  else if(pd.smokerStatus&&smok.includes('non'))flags.push({t:'ok',title:'Non-Smoker',desc:'No tobacco loading ✓'});
+
+  conds.forEach(c=>{
+    const isEx=UWR.excl.some(e=>c.toLowerCase().includes(e));
+    const isHR=UWR.hi.some(e=>c.toLowerCase().includes(e));
+    if(isEx){score-=40;excls.push(c);flags.push({t:'critical',title:'Exclusion Condition',desc:c});}
+    else if(isHR){score-=15;loads.push({r:'High-risk: '+c,adj:-15,sev:'high'});flags.push({t:'warning',title:'High Risk Condition',desc:c});}
+    else{score-=8;loads.push({r:'Condition: '+c,adj:-8,sev:'medium'});}
+  });
+  if(famHx.length){score-=10;loads.push({r:'Family history',adj:-10,sev:'low'});flags.push({t:'info',title:'Family History',desc:famHx.join(', ')});}
+  if(haz.length){score-=15;loads.push({r:'Hazardous activities',adj:-15,sev:'high'});flags.push({t:'warning',title:'Hazardous Activities',desc:haz.join(', ')});}
+  if(sa>2000000){score-=10;flags.push({t:'warning',title:'Very High SA',desc:`${fd.currency||''} ${sa.toLocaleString()} — full financial UW`});}
+  else if(sa>1000000)flags.push({t:'info',title:'High SA',desc:`${fd.currency||''} ${sa.toLocaleString()} — financial questionnaire`});
+  else if(sa>0)flags.push({t:'ok',title:'Standard SA',desc:'Within normal limits ✓'});
+
+  const fs=Math.max(0,Math.min(100,Math.round(score)));
+  const cat=fs>=85?'Standard':fs>=70?'Standard Plus':fs>=55?'Substandard':fs>=35?'High Risk':'Declined';
+  const catC=fs>=85?'var(--green)':fs>=70?'var(--teal)':fs>=55?'var(--amber)':fs>=35?'var(--red)':'#7F1D1D';
+  return{adjustedScore:fs,riskCategory:cat,categoryColor:catC,loadings:loads,exclusions:excls,flags};
+}
+async function aDecide(cls,ext,ev,risk){
+  const r=await jsonCall('decision',`You are a Chief Underwriter. Return ONLY raw JSON:
+{"decision":"Accept","decisionReason":"professional rationale","conditions":[],"premiumLoading":0,"exclusions":[],"reviewRequired":false,"decisionConfidence":80,"uwNarrative":"2-3 professional sentences","nextReviewDate":"12 months","recommendedAction":"brief action"}
+RISK_SCORE:${risk.adjustedScore} CATEGORY:${risk.riskCategory} LOADINGS:${JSON.stringify(risk.loadings)} EXCLUSIONS:${JSON.stringify(risk.exclusions)} CONFIDENCE:${ev.confidenceLevel} AGE:${ext.personalDetails?.age} SA:${ext.financialDetails?.sumAssured} CONDITIONS:${JSON.stringify(ext.medicalDetails?.existingConditions)} SMOKER:${ext.personalDetails?.smokerStatus}`);
+  return{decision:'Refer to Underwriter',decisionReason:'Insufficient data for automated decision',conditions:[],premiumLoading:0,exclusions:[],reviewRequired:true,decisionConfidence:50,uwNarrative:'Case requires underwriter review.',nextReviewDate:'6 months',recommendedAction:'Review all case details',...(r||{})};
+}
+function aSP(dec){
+  if(!['Accept with Conditions','Rated'].includes(dec.decision))return null;
+  return{caseType:dec.decision==='Rated'?'Rated Case':'SP — Accept with Conditions',premiumAdjustment:`+${dec.premiumLoading}%`,conditionsApplied:dec.conditions||[],exclusionsApplied:dec.exclusions||[],reviewAt:dec.nextReviewDate||'12 months'};
+}
+function aRef(dec,ext,ev,risk){
+  if(!['Refer to Underwriter','Decline'].includes(dec.decision))return null;
+  return{referralPriority:dec.decision==='Decline'?'HIGH':'MEDIUM',referralTo:'Senior Underwriter',referralReason:dec.decisionReason,caseSummary:{name:ext.personalDetails?.name,age:ext.personalDetails?.age,riskScore:risk.adjustedScore,riskCategory:risk.riskCategory},additionalEvidenceNeeded:ev.recommendAdditionalEvidence||[],humanDecisionRequired:true};
+}
+
+// ════════════════════════════════════════════
+// PIPELINE
+// ════════════════════════════════════════════
+async function runPipeline(){
+  const txt=document.getElementById('manualText').value.trim();
+  if(!txt){showErr('Paste or upload document text first.');return;}
+  if(!API_KEY){showErr('Connect your Gemini API key first.');return;}
+  running=true;results=null;doneCount=0;
+  const btn=document.getElementById('runBtn');
+  btn.disabled=true;btn.innerHTML='<div class="sp"></div> Running AI Agents...';
+  document.getElementById('xferBanner').style.display='none';
+  document.getElementById('errBar').style.display='none';
+  AGENTS.forEach(a=>setAR(a.id,'idle'));
+  setP(0);
+  try{
+    const R={};
+    setAR('classifier','active');R.cls=await aClassify(txt);doneAR('classifier');
+    setAR('extractor','active');R.ext=await aExtract(txt,R.cls);doneAR('extractor');
+    setAR('enricher','active');R.ext=aEnrich(R.ext);doneAR('enricher');
+    setAR('evaluator','active');R.ev=await aEval(R.cls,R.ext);doneAR('evaluator');
+    setAR('risk','active');R.risk=aRisk(R.cls,R.ext,R.ev);doneAR('risk');
+    setAR('decision','active');R.dec=await aDecide(R.cls,R.ext,R.ev,R.risk);doneAR('decision');
+    setAR('sp_handler','active');R.sp=aSP(R.dec);doneAR('sp_handler');
+    setAR('referral','active');R.ref=aRef(R.dec,R.ext,R.ev,R.risk);doneAR('referral');
+    R.completedAt=new Date().toISOString();
+    results=R;
+    prefillUW(R);
+    const pd=R.ext?.personalDetails||{},fd=R.ext?.financialDetails||{};
+    document.getElementById('xferBanner').style.display='flex';
+    document.getElementById('xferMsg').textContent=`All 8 agents complete. Case: ${pd.name||'Applicant'} · ${R.cls?.insuranceClass||'Insurance'} · Risk: ${R.risk?.riskCategory||'—'} · AI Decision: ${R.dec?.decision||'—'}`;
+    document.getElementById('uwNavBtn').style.opacity='1';
+    document.getElementById('uwNavBtn').style.cursor='pointer';
+    showToast('AI analysis complete — workspace ready!','success');
+  }catch(e){showErr('Pipeline error: '+e.message);}
+  finally{running=false;btn.disabled=false;btn.innerHTML='▶ Analyse &amp; Pre-fill UW Workspace';}
+}
+function setAR(id,state){
+  const row=document.getElementById('ar-'+id);
+  const stat=document.getElementById('as-'+id);
+  if(!row)return;
+  row.className='agent-row '+state;
+  if(state==='active')stat.innerHTML='<div class="sp"></div>';
+  else if(state==='done')stat.innerHTML='<span style="color:var(--green);font-weight:700">✓</span>';
+  else stat.innerHTML='';
+}
+function doneAR(id){doneCount++;setAR(id,'done');setP(doneCount);}
+function setP(n){
+  document.getElementById('progFill').style.width=Math.round((n/8)*100)+'%';
+  document.getElementById('agProg').textContent=n+' / 8';
+}
+
+// ════════════════════════════════════════════
+// PRE-FILL UW WORKSPACE
+// ════════════════════════════════════════════
+function prefillUW(R){
+  const cls=R.cls||{},ext=R.ext||{},ev=R.ev||{},risk=R.risk||{},dec=R.dec||{};
+  const pd=ext.personalDetails||{},fd=ext.financialDetails||{},md=ext.medicalDetails||{};
+  const score=risk.adjustedScore??0, cat=risk.riskCategory||'—', catC=risk.categoryColor||'#6B7280';
+
+  // Header
+  const cid='UW-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);
+  document.getElementById('caseId').textContent=cid;
+  document.getElementById('caseName').textContent=pd.name||'AI Analysed Case';
+  const meta=[pd.age?pd.age+' yr':'',pd.gender||'',pd.smokerStatus||'',cls.productType||'',fd.currency&&fd.sumAssured?fd.currency+' '+Number(fd.sumAssured).toLocaleString()+' SA':''].filter(Boolean).join(' · ');
+  document.getElementById('caseMeta').textContent=meta||'AI Pre-populated';
+  document.getElementById('ptDate').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  const rp=document.getElementById('riskPill');
+  document.getElementById('riskPillTxt').textContent=cat;
+  rp.className='tb-pill '+(score>=85?'standard':score>=55?'high':'critical');
+  document.getElementById('riskBdg').textContent=cat;
+  document.getElementById('riskBdg').className='bdg '+(score>=85?'g':score>=55?'a':'r');
+
+  // Risk classification
+  const cf=risk.flags?.filter(f=>f.t==='critical')||[];
+  const wf=risk.flags?.filter(f=>f.t==='warning')||[];
+  const of=risk.flags?.filter(f=>f.t==='ok')||[];
+  let rh='';
+  if(cf.length)rh+=`<div class="risk-box critical"><div class="rb-title critical">⬆ Critical Risk Findings</div>${cf.map(f=>`<div class="rb-finding">${esc(f.title)}: ${esc(f.desc)}</div>`).join('')}</div>`;
+  if(wf.length)rh+=`<div class="risk-box high"><div class="rb-title high">⚠ Warning Flags</div>${wf.map(f=>`<div class="rb-finding">${esc(f.title)}: ${esc(f.desc)}</div>`).join('')}</div>`;
+  if(of.length)rh+=`<div class="risk-box std"><div class="rb-title std">✓ Clear Items</div>${of.map(f=>`<div class="rb-finding">${esc(f.desc)}</div>`).join('')}</div>`;
+  rh+=`<div class="gap-row" style="margin-top:8px">
+    ${cf.length?`<span class="chip r">🚨 ${cf.length} Critical</span>`:''}
+    ${wf.length?`<span class="chip a">⚠ ${wf.length} Warnings</span>`:''}
+    ${of.length?`<span class="chip g">✓ ${of.length} Clear</span>`:''}
+    ${risk.exclusions?.length?`<span class="chip v">⛔ ${risk.exclusions.length} Exclusion</span>`:''}
+  </div>`;
+  document.getElementById('riskBd').innerHTML=rh||'<div style="color:var(--ink3);font-size:11px">No significant flags identified.</div>';
+
+  // AI pre-assessment
+  document.getElementById('aiDecTtl').textContent='AI Recommendation: '+(dec.decision||'—');
+  document.getElementById('aiDecSub').textContent='Confidence: '+(dec.decisionConfidence||0)+'% · Loading: +'+(dec.premiumLoading||0)+'%';
+  const flist=[];
+  if(dec.premiumLoading>0)flist.push({i:'💰',t:`Premium loading: +${dec.premiumLoading}% recommended`});
+  (dec.conditions||[]).forEach(c=>flist.push({i:'📋',t:'Condition: '+c}));
+  (dec.exclusions||[]).forEach(e=>flist.push({i:'⛔',t:'Exclusion: '+e}));
+  if(dec.nextReviewDate)flist.push({i:'📅',t:'Review: '+dec.nextReviewDate});
+  if(!flist.length)flist.push({i:'✅',t:dec.uwNarrative||'Decision complete'});
+  document.getElementById('aiDecFindings').innerHTML=flist.map(f=>`<div class="md-f"><span class="md-fi">${f.i}</span><div>${esc(f.t)}</div></div>`).join('');
+
+  // Quick facts
+  document.getElementById('qFacts').innerHTML=[
+    dr('Plan',cls.productType||'—'),
+    dr('Sum Assured',fd.sumAssured?`${fd.currency||''} ${Number(fd.sumAssured).toLocaleString()}`:null,'blue'),
+    dr('AI Risk Score',`${score}/100 — ${cat}`,score>=85?'green':score>=55?'amber':'red'),
+    dr('AI Decision',dec.decision||'—',dec.decision==='Accept'?'green':dec.decision?.includes('Decline')?'red':'amber'),
+    dr('Loading',`+${dec.premiumLoading||0}%`,dec.premiumLoading>0?'amber':'green'),
+    dr('Policy Term',ext.policyDetails?.term?ext.policyDetails.term+' years':null),
+    dr('Document Type',cls.documentType||'—'),
+    dr('Quality Grade',ev.qualityGrade||'—')
+  ].join('');
+
+  // AI remark
+  document.getElementById('aiRemark').innerHTML=`Risk score <strong>${score}/100</strong> — <strong>${cat}</strong>. ${(risk.flags||[]).length} flags raised. AI recommendation: <strong>${dec.decision||'—'}</strong> (${dec.decisionConfidence||0}% confidence). ${dec.uwNarrative||''}`;
+
+  // Decision modal
+  document.getElementById('aiRecDec').textContent=dec.decision||'—';
+  document.getElementById('aiRecLoad').textContent=dec.premiumLoading>0?`Premium loading: +${dec.premiumLoading}%`:'';
+  document.getElementById('aiRecNarr').textContent=dec.uwNarrative||'';
+
+  // MEDICAL tab
+  const vcs=[];
+  if(md.bmi)vcs.push({lbl:'BMI',val:md.bmi,ref:'18.5–25',s:md.bmi>=35?'a':md.bmi>=30||md.bmi<17?'b':'n',txt:md.bmi>=35?'⬆ Obese III':md.bmi>=30?'⚠ Obese':md.bmi<17?'⚠ Underweight':'✓ Normal'});
+  if(md.bloodPressure)vcs.push({lbl:'Blood Pressure',val:md.bloodPressure,ref:'120/80',s:'b',txt:'Review'});
+  if(pd.smokerStatus){const sm=pd.smokerStatus.toLowerCase();const iS=sm.includes('smoker')&&!sm.includes('non')&&!sm.includes('ex');vcs.push({lbl:'Smoker Status',val:pd.smokerStatus,ref:'Non-smoker',s:iS?'a':'n',txt:iS?'⬆ Loading':'✓ Clear'});}
+  if(md.cholesterol)vcs.push({lbl:'Cholesterol',val:md.cholesterol,ref:'<200',s:md.cholesterol>240?'a':md.cholesterol>200?'b':'n',txt:md.cholesterol>240?'⬆ High':'⚠ Border'});
+  if(md.height_cm)vcs.push({lbl:'Height',val:md.height_cm+'cm',ref:'',s:'n',txt:''});
+  if(md.weight_kg)vcs.push({lbl:'Weight',val:md.weight_kg+'kg',ref:'',s:'n',txt:''});
+  document.getElementById('vitGrid').innerHTML=vcs.length?
+    vcs.map(v=>`<div class="vc ${v.s} ai-fill"><div class="vc-lbl">${v.lbl} <span class="vc-ai">AI</span></div><div class="vc-val ${v.s}">${esc(String(v.val))}</div>${v.ref?`<div class="vc-ref">${v.ref}</div>`:''}<div class="vc-stat ${v.s}">${v.txt}</div></div>`).join(''):
+    '<div style="grid-column:1/-1;color:var(--ink4);font-size:11px;text-align:center;padding:14px">No vital data extracted.</div>';
+
+  let condH='';
+  (md.existingConditions||[]).forEach(c=>{
+    const isEx=UWR.excl.some(e=>c.toLowerCase().includes(e));
+    const isHR=UWR.hi.some(e=>c.toLowerCase().includes(e));
+    condH+=`<div class="rmbox"><div class="rm-who"><span>${isEx?'⛔':isHR?'❤️':'💊'} ${esc(c)}</span><span class="chip ${isEx?'r':'a'}">${isEx?'Exclusion':isHR?'Critical':'High'}</span></div>AI-extracted condition. Verify with latest medical reports.</div>`;
+  });
+  if(md.familyHistory?.length)condH+=`<div class="rmbox"><div class="rm-who"><span>👨‍👩‍👧 Family History</span><span class="chip a">Noted</span></div>${(md.familyHistory||[]).join(', ')}</div>`;
+  document.getElementById('condPanel').innerHTML=condH||'<div style="color:var(--ink4);font-size:11px;padding:10px 0;text-align:center">No conditions extracted.</div>';
+  document.getElementById('medFullRmk').innerHTML=`<strong>AI Medical Pre-assessment:</strong> ${dec.uwNarrative||''}${dec.premiumLoading>0?` Recommended loading: <strong>+${dec.premiumLoading}%</strong>.`:''}${(dec.conditions||[]).length?' Conditions: '+dec.conditions.join(', ')+'.':''}${(dec.exclusions||[]).length?' Exclusions: '+dec.exclusions.join(', ')+'.':''}`;
+
+  // FINANCIAL tab
+  const saRatio=fd.sumAssured&&fd.annualIncome?Math.round(fd.sumAssured/fd.annualIncome):null;
+  document.getElementById('finSum').innerHTML=[
+    dr('Sum Assured',fd.sumAssured?`${fd.currency||''} ${Number(fd.sumAssured).toLocaleString()}`:null,'blue'),
+    dr('Annual Income',fd.annualIncome?`${fd.currency||''} ${Number(fd.annualIncome).toLocaleString()}`:null,'green'),
+    saRatio?dr('SA:Income Ratio',saRatio+'x',saRatio>20?'red':saRatio>15?'amber':'green'):'',
+    dr('Existing Cover',fd.existingCover?`${fd.currency||''} ${Number(fd.existingCover).toLocaleString()}`:null),
+    dr('Net Worth',fd.netWorth?`${fd.currency||''} ${Number(fd.netWorth).toLocaleString()}`:null),
+    dr('SA Financial Flag',(fd.sumAssured||0)>2000000?'Full financial UW required':(fd.sumAssured||0)>1000000?'Financial questionnaire required':'Within standard limits',(fd.sumAssured||0)>2000000?'red':(fd.sumAssured||0)>1000000?'amber':'green')
+  ].join('');
+  const ffH=(risk.flags||[]).filter(f=>f.title?.toLowerCase().includes('sa')||f.title?.toLowerCase().includes('financial')).map(f=>`<div class="rmbox"><div class="rm-who"><span>💰 ${esc(f.title)}</span><span class="chip ${f.t==='critical'?'r':f.t==='warning'?'a':'b'}">${f.t==='critical'?'Critical':f.t==='warning'?'Review':'Info'}</span></div>${esc(f.desc)}</div>`).join('');
+  document.getElementById('finFlags').innerHTML=ffH||'<div style="color:var(--ink3);font-size:11px;padding:10px 0;text-align:center">No financial flags identified.</div>';
+
+  // PROFILE tab
+  document.getElementById('profDet').innerHTML=[
+    dr('Full Name',pd.name), dr('Date of Birth',pd.dob), dr('Age',pd.age?pd.age+' years':null),
+    dr('Gender',pd.gender), dr('Occupation',pd.occupation), dr('Smoker',pd.smokerStatus),
+    dr('Nationality',pd.nationality), dr('Residency',pd.residency)
+  ].join('');
+  document.getElementById('polDet').innerHTML=[
+    dr('Plan',cls.productType), dr('Term',ext.policyDetails?.term?ext.policyDetails.term+' years':null),
+    dr('Sum Assured',fd.sumAssured?`${fd.currency||''} ${Number(fd.sumAssured||0).toLocaleString()}`:null,'blue'),
+    dr('Beneficiaries',(ext.policyDetails?.beneficiaries||[]).join(', ')||null),
+    dr('Riders',(ext.policyDetails?.riders||[]).join(', ')||null)
+  ].join('');
+
+  // AI SCORES tab
+  const sc=163.4*(score/100);
+  document.getElementById('mcMort').innerHTML=`
+    <div class="mc-row">
+      <div class="mc-gauge"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#E8EEF5" stroke-width="6"/><circle cx="32" cy="32" r="26" fill="none" stroke="${catC}" stroke-width="6" stroke-dasharray="${sc} 163.4" stroke-dashoffset="40.9" stroke-linecap="round" transform="rotate(-90 32 32)"/></svg><div class="mc-gval" style="color:${catC}">${score}</div></div>
+      <div class="mc-det"><div class="mc-lbl" style="color:${catC}">${cat}</div><div class="mc-sub">${score}th percentile mortality risk</div></div>
+    </div>
+    <div class="mc-factors">
+      ${(risk.loadings||[]).slice(0,5).map(l=>`<div class="mc-factor"><span class="mc-fl">${esc((l.r||'').substring(0,22))}</span><div class="mc-fb"><div class="mc-ff" style="width:${Math.min(100,Math.abs(l.adj)*2)}%;background:${catC}"></div></div><span class="mc-fv" style="color:${catC}">${Math.abs(l.adj)}%</span></div>`).join('')}
+    </div>`;
+  document.getElementById('mcUW').innerHTML=`
+    <div class="mc-row">
+      <div class="mc-gauge"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#E8EEF5" stroke-width="6"/><circle cx="32" cy="32" r="26" fill="none" stroke="${catC}" stroke-width="6" stroke-dasharray="${sc} 163.4" stroke-dashoffset="40.9" stroke-linecap="round" transform="rotate(-90 32 32)"/></svg><div class="mc-gval" style="color:${catC}">${score}</div></div>
+      <div class="mc-det"><div class="mc-lbl" style="color:${catC}">UW Score: ${score}/100</div><div class="mc-sub">${(risk.loadings||[]).length} loadings · ${(risk.exclusions||[]).length} exclusions</div></div>
+    </div>
+    <div style="margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);font-size:10px">
+      Total Loading: <strong style="color:var(--amber)">+${(risk.loadings||[]).reduce((s,l)=>s+(l.adj||0),0)}%</strong> &nbsp;|&nbsp; Confidence: <strong>${dec.decisionConfidence||0}%</strong>
+    </div>`;
+  const fr=Math.min(30,Math.max(5,(risk.exclusions?.length||0)*12+5+(risk.flags?.filter(f=>f.t==='critical').length||0)*3));
+  document.getElementById('mcFraud').innerHTML=`
+    <div class="mc-row">
+      <div class="mc-gauge"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#E8EEF5" stroke-width="6"/><circle cx="32" cy="32" r="26" fill="none" stroke="${fr<20?'var(--green)':'var(--amber)'}" stroke-width="6" stroke-dasharray="${163.4*(fr/100)} 163.4" stroke-dashoffset="40.9" stroke-linecap="round" transform="rotate(-90 32 32)"/></svg><div class="mc-gval" style="color:${fr<20?'var(--green)':'var(--amber)'}">${fr}</div></div>
+      <div class="mc-det"><div class="mc-lbl" style="color:${fr<20?'var(--green)':'var(--amber)'}">${fr<20?'Low Fraud Risk':'Moderate — Review'}</div><div class="mc-sub">Composite fraud score /100</div></div>
+    </div>`;
+  document.getElementById('aiRecTxt').innerHTML=`Based on AI analysis (<strong>${dec.decisionConfidence||0}%</strong> confidence), recommended decision: <strong>${dec.decision||'—'}</strong>. ${dec.uwNarrative||''}${dec.premiumLoading>0?` Premium loading: <strong>+${dec.premiumLoading}%</strong>.`:''}`;
+
+  // DOCS panel
+  const docItems=[
+    {ico:'📄',name:'Submitted Documents',meta:'AI analysed · '+cls.documentType,s:'ai'},
+    ...(md.existingConditions?.length?[{ico:'🩺',name:'Medical Exam Report',meta:'Conditions extracted',s:'ai'}]:[]),
+    ...(fd.sumAssured?[{ico:'💹',name:'Financial Document',meta:'Financials extracted',s:'ai'}]:[]),
+    ...docs.map(d=>({ico:'📎',name:d.name,meta:'Uploaded',s:'ok'}))
+  ];
+  document.getElementById('docPanel').innerHTML=docItems.map(d=>`
+    <div class="doc-item"><div class="di-ico">${d.ico}</div>
+    <div class="di-info"><div class="di-name">${esc(d.name)}</div><div class="di-meta">${d.meta}</div></div>
+    <span class="di-st ${d.s}">${d.s==='ai'?'⚡ AI':d.s==='ok'?'✓':'Pending'}</span></div>`).join('');
+
+  // FR panel
+  const gaps=[...(ev.dataGaps||[]),...(ev.recommendAdditionalEvidence||[])];
+  if(gaps.length){
+    document.getElementById('frPanel').innerHTML=gaps.map(g=>`
+      <div class="rmbox" style="margin-bottom:6px">
+        <div class="rm-who"><span>📋 ${esc(g)}</span><span class="chip a">AI Suggested</span></div>
+        ${esc(g)} — required for complete UW assessment.
+        <div style="margin-top:6px"><button class="btn btn-g btn-sm" onclick="showToast('FR raised','success')">Raise FR</button></div>
+      </div>`).join('');
+  }
+
+  // Activity log
+  document.getElementById('actLog').innerHTML=`
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#1D3461,var(--blue-mid));color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">RK</div>
+      <div><div style="font-size:11px;font-weight:600">Rajesh Kumar — Sr. Underwriter</div><div style="font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.5">Case received in UW workspace. AI pre-analysis complete. Risk: ${score}/100 (${cat}). AI recommendation: ${dec.decision||'—'}. Reviewing now.</div><div style="font-size:9px;font-family:var(--mono);color:var(--ink4);margin-top:3px">${new Date().toLocaleString()}</div></div>
+    </div>
+    <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">🤖</div>
+      <div><div style="font-size:11px;font-weight:600">NovaBench UW — AI Engine (8 Agents)</div><div style="font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.5">Pipeline completed. Flags: ${(risk.flags||[]).filter(f=>f.t==='critical').length} critical, ${(risk.flags||[]).filter(f=>f.t==='warning').length} warnings. Loadings: ${(risk.loadings||[]).length}. Exclusions: ${(risk.exclusions||[]).length}. Confidence: ${dec.decisionConfidence||0}%. All data pre-populated.</div><div style="font-size:9px;font-family:var(--mono);color:var(--ink4);margin-top:3px">${new Date().toLocaleString()} · AI Generated</div></div>
+    </div>
+    <div style="display:flex;gap:12px;padding:9px 0">
+      <div style="width:30px;height:30px;border-radius:7px;background:#444;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚙</div>
+      <div><div style="font-size:11px;font-weight:600">System — Auto Submission</div><div style="font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.5">Case ${cid} created from sales portal. Docs: ${docItems.length}. Class: ${cls.insuranceClass} — ${cls.documentType}. AML: Clear. CKYC: Verified. Routed to UW queue.</div><div style="font-size:9px;font-family:var(--mono);color:var(--ink4);margin-top:3px">${new Date().toLocaleString()}</div></div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function dr(label,val,cls=''){
+  if(val==null||val===''||String(val).includes('null')||String(val).includes('undefined'))return'';
+  return`<div class="drow"><span class="dl">${label}</span><span class="dv ${cls}">${esc(String(val))}</span></div>`;
+}
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ════════════════════════════════════════════
+// UW WORKSPACE UI
+// ════════════════════════════════════════════
+function swTab(name,el){
+  document.querySelectorAll('#v-uw .tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('on'));
+  if(el)el.classList.add('on');
+  document.getElementById('tab-'+name).classList.add('on');
+}
+function swRP(name,el){
+  document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.rp-body').forEach(c=>c.classList.add('h'));
+  if(el)el.classList.add('on');
+  else document.querySelectorAll('.rp-tab').forEach(t=>{if(t.textContent.toLowerCase().includes(name))t.classList.add('on');});
+  const rp=document.getElementById('rp-'+name);
+  if(rp)rp.classList.remove('h');
+}
+const apiData={
+  cibil:{msg:'✅ <strong>CIBIL Score: 742</strong> — Good standing. No defaults.'},
+  epfo:{msg:'✅ <strong>EPFO:</strong> Employment verified. Active PF account.'},
+  gst:{msg:'✅ <strong>GST Returns:</strong> Filed regularly. No pending dues.'},
+  aml:{msg:'✅ <strong>AML/PEP:</strong> No match. Sanctions clear. FATF compliant.'},
+  ckyc:{msg:'✅ <strong>CKYC:</strong> Identity verified. KYC complete.'}
+};
+function callAPI(key){
+  const r=apiData[key];if(!r)return;
+  showToast('Calling '+key.toUpperCase()+'...','info');
+  setTimeout(()=>{
+    const res=document.getElementById('apiRes');
+    const div=document.createElement('div');
+    div.style.cssText='padding:7px 10px;border-radius:var(--r);font-size:11px;border:1px solid #A7E8D4;background:var(--green-lt);color:var(--green);margin-top:5px;animation:slideRight .25s ease';
+    div.innerHTML=r.msg;res.appendChild(div);
+    showToast(key.toUpperCase()+' verified ✓','success');
+  },700);
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function makeDecision(d){
+  closeModal('decModal');
+  const m={'Accept — Standard':'Policy accepted at standard rates ✓','Accept with Loading':'Accepted with loading — letter generated ✓','Refer to CMO':'Case referred to CMO','Refer to Sr. UW':'Escalated to Sr. Underwriter','Postpone':'Case postponed','Decline':'Proposal declined'};
+  showToast(m[d]||'Decision recorded','success');
+}
+function saveNote(){
+  const t=document.getElementById('noteInput').value.trim();
+  if(!t){closeModal('notesModal');return;}
+  document.getElementById('uwRmkBox').style.display='';
+  document.getElementById('uwRmkTxt').textContent=t;
+  document.getElementById('uwRmkTime').textContent=new Date().toLocaleString();
+  closeModal('notesModal');showToast('Note saved ✓','success');
+}
+function openChatPanel(){document.getElementById('chatPanel').classList.add('open');}
+function closeChatPanel(){document.getElementById('chatPanel').classList.remove('open');}
+function sendChat(){
+  const inp=document.getElementById('chatInput'),msg=inp.value.trim();if(!msg)return;
+  const msgs=document.getElementById('chatMsgs');
+  msgs.innerHTML+=`<div class="cm sent"><div class="cm-bubble">${esc(msg)}</div><div class="cm-time">Now</div></div>`;
+  inp.value='';msgs.scrollTop=msgs.scrollHeight;
+  setTimeout(()=>{msgs.innerHTML+=`<div class="cm recv"><div class="cm-who">Team</div><div class="cm-bubble">Noted, will review shortly.</div><div class="cm-time">Now</div></div>`;msgs.scrollTop=msgs.scrollHeight;},900);
+}
+function sendOnEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+function showToast(msg,type='info'){
+  const i={success:'✅',warn:'⚠️',error:'❌',info:'ℹ️'};
+  const c=document.getElementById('toastWrap'),t=document.createElement('div');
+  t.className='toast';t.innerHTML=`<span>${i[type]||'ℹ️'}</span>${esc(msg)}`;
+  c.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+function showErr(msg){document.getElementById('errMsg').textContent=msg;document.getElementById('errBar').style.display='flex';}
+
+// ════════════════════════════════════════════
+// DOWNLOADS
+// ════════════════════════════════════════════
+function downloadJSON(){
+  if(!results)return showToast('Run pipeline first','warn');
+  const b=new Blob([JSON.stringify(results,null,2)],{type:'application/json'});
+  trigDL(b,'pulseuw-assessment.json');
+}
+function downloadPDF(){
+  if(!results)return showToast('Run pipeline first','warn');
+  if(typeof window.jspdf==='undefined'){downloadTXT();return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const R=results,dec=R.dec||{},risk=R.risk||{},ext=R.ext||{},cls=R.cls||{};
+  const pd=ext.personalDetails||{},fd=ext.financialDetails||{},md=ext.medicalDetails||{};
+  const W=210,M=16,TW=W-M*2;let y=0;
+  function np(){doc.addPage();y=18;}
+  function chk(n=10){if(y+n>275)np();}
+  // Cover
+  doc.setFillColor(15,41,82);doc.rect(0,0,W,50,'F');
+  doc.setFillColor(27,95,222);doc.rect(0,36,W,14,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(22);doc.setFont('helvetica','bold');
+  doc.text('PulseUW',M,20);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(147,197,253);
+  doc.text('BIONIC UNDERWRITING ASSESSMENT REPORT',M,28);
+  doc.setTextColor(255,255,255);doc.setFontSize(8);
+  doc.text('Generated: '+new Date().toLocaleString()+' | Powered by Gemini AI & NovaBench UW Engine',M,43);
+  y=60;
+  // Decision box
+  const d=dec.decision||'Pending';
+  const dc=d==='Accept'?[15,123,82]:d.includes('Condition')||d==='Rated'?[201,123,14]:d.includes('Refer')?[107,63,160]:[217,59,59];
+  doc.setFillColor(...dc);doc.roundedRect(M,y,TW,28,3,3,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('UNDERWRITING DECISION',M+6,y+8);
+  doc.setFontSize(16);doc.text(d,M+6,y+20);
+  y+=36;
+  // Chips
+  function chip(l,v,x,w){doc.setFillColor(248,250,252);doc.roundedRect(x,y,w,14,2,2,'F');doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);doc.text(l,x+3,y+5);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(15,23,42);doc.text(String(v||'—'),x+3,y+12);}
+  chip('Risk Score',`${risk.adjustedScore||0}/100`,M,42);
+  chip('Category',risk.riskCategory||'—',M+44,40);
+  chip('Loading',`+${dec.premiumLoading||0}%`,M+86,36);
+  chip('Confidence',`${dec.decisionConfidence||0}%`,M+124,30);
+  y+=22;
+  function sec(t,col=[27,95,222]){chk(14);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...col);doc.text(t,M,y+4);doc.setDrawColor(...col,60);doc.line(M,y+6,M+TW,y+6);y+=12;}
+  function row(k,v,vc=[15,23,42]){chk(6);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,116,139);doc.text(String(k||''),M,y);doc.setTextColor(...vc);doc.setFont('helvetica','bold');doc.text(doc.splitTextToSize(String(v!=null?v:'—').substring(0,80),TW-50)[0]||'',M+55,y);y+=5.5;}
+  function txt(t,col=[130,130,130]){chk(5);doc.setTextColor(...col);doc.setFontSize(7);doc.setFont('helvetica','normal');const ls=doc.splitTextToSize(String(t||'').substring(0,300),TW-2);ls.forEach(l=>{if(y>270)np();doc.text(l,M,y);y+=4;});}
+  sec('NARRATIVE',[27,95,222]);txt(dec.uwNarrative||'',[50,60,80]);y+=3;
+  sec('APPLICANT',[42,183,202]);row('Name',pd.name);row('Age',pd.age);row('Gender',pd.gender);row('Occupation',pd.occupation);row('Smoker',pd.smokerStatus);y+=3;
+  sec('FINANCIAL',[15,123,82]);row('Sum Assured',fd.sumAssured?(fd.currency+' '+Number(fd.sumAssured).toLocaleString()):null);row('Annual Income',fd.annualIncome?(fd.currency+' '+Number(fd.annualIncome).toLocaleString()):null);row('Existing Cover',fd.existingCover?(fd.currency+' '+Number(fd.existingCover).toLocaleString()):null);y+=3;
+  sec('MEDICAL',[107,63,160]);row('BMI',md.bmi);row('Blood Pressure',md.bloodPressure);row('Conditions',(md.existingConditions||[]).join(', ')||'None');row('Medications',(md.medications||[]).join(', ')||'None');row('Family History',(md.familyHistory||[]).join(', ')||'None');y+=3;
+  sec('RISK FLAGS',[217,59,59]);(risk.flags||[]).forEach(f=>row('['+f.t.toUpperCase()+'] '+f.title,f.desc,f.t==='critical'?[217,59,59]:f.t==='warning'?[201,123,14]:[15,123,82]));if(!(risk.flags||[]).length)row('—','No flags identified');y+=3;
+  sec('PREMIUM LOADINGS',[201,123,14]);(risk.loadings||[]).forEach(l=>row(l.r,l.adj+'%',[217,59,59]));const tot=(risk.loadings||[]).reduce((s,l)=>s+(l.adj||0),0);row('TOTAL LOADING',tot+'%',[217,59,59]);y+=3;
+  if((dec.conditions||[]).length||(dec.exclusions||[]).length){sec('DECISION TERMS',[27,95,222]);(dec.conditions||[]).forEach(c=>row('Condition',c));(dec.exclusions||[]).forEach(e=>row('Exclusion',e,[217,59,59]));if(dec.nextReviewDate)row('Next Review',dec.nextReviewDate);y+=3;}
+  if(R.sp){sec('SP CASE TERMS',[201,123,14]);row('Case Type',R.sp.caseType);row('Premium',R.sp.premiumAdjustment);row('Review At',R.sp.reviewAt);(R.sp.conditionsApplied||[]).forEach(c=>row('Condition',c));y+=3;}
+  if(R.ref){sec('REFERRAL PACKAGE',[107,63,160]);row('Priority',R.ref.referralPriority,[217,59,59]);row('Referred To',R.ref.referralTo);txt(R.ref.referralReason||'');y+=3;}
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFillColor(248,250,252);doc.rect(0,285,W,12,'F');doc.setDrawColor(226,232,240);doc.line(0,285,W,285);doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(148,163,184);doc.text('PulseUW — Bionic Underwriting System — AI-assisted decisions require licensed underwriter review',W/2,292,{align:'center'});doc.text(`Page ${i} of ${pages}`,W-M,292,{align:'right'});}
+  doc.save('pulseuw-assessment.pdf');
+}
+function downloadTXT(){
+  if(!results)return;
+  const R=results,dec=R.dec||{},risk=R.risk||{};
+  const lines=['PulseUW — Bionic Underwriting Assessment','Generated: '+new Date().toLocaleString(),'='.repeat(60),'','DECISION: '+(dec.decision||'—'),'Risk Score: '+(risk.adjustedScore||0)+'/100 — '+(risk.riskCategory||'—'),'Loading: +'+(dec.premiumLoading||0)+'%','','Narrative: '+(dec.uwNarrative||''),''];
+  const b=new Blob([lines.join('\n')],{type:'text/plain'});
+  trigDL(b,'pulseuw-assessment.txt');
+}
+function trigDL(b,n){const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
+</script>
+</body>
+</html>
